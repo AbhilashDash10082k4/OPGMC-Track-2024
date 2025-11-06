@@ -122,6 +122,7 @@ const strToJson = (ip: string[]) => {
   }
   return op;
 };
+app.get("/", (req, res) => res.send("✅ Backend is live! View the data at https://opgmc-track-2024-1.onrender.com/pdfparse"));
 app.get("/pdfparse", async (req, res) => {
   try {
     const fileId = "19Rr37cEJJbK0YhYu-b_3z8_8p3Zz2ZGF";
