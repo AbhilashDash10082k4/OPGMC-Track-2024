@@ -6,7 +6,7 @@ import path from "node:path";
 import axios from "axios";
 import fs from "fs/promises";
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 function mergeContinuationLines2(page: string[]): string[] {
   const out: string[] = [];
   for (const raw of page) {
