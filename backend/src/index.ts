@@ -1,8 +1,10 @@
 import express from "express";
 import { PDFParse } from "pdf-parse";
 import { ExtractedData, optionalDataType } from "./lib/types";
-import  {readFileSync} from "node:fs";
-
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import axios from "axios";
+import fs from "fs/promises";
 const app = express();
 const port = 3000;
 function mergeContinuationLines2(page: string[]): string[] {
@@ -18,8 +20,7 @@ function mergeContinuationLines2(page: string[]): string[] {
   }
   return out;
 }
-const extractPdfData = async (filePath: string) => {
-  const existingPdfBytes = readFileSync(filePath);
+const extractPdfData = async (existingPdfBytes: Buffer) => {
   const parser = new PDFParse({ data: existingPdfBytes });
   const result = await parser.getText();
   await parser.destroy();
@@ -47,13 +48,15 @@ const strToJson = (ip: string[]) => {
     if (!lineCleaned?.trim()) continue;
 
     for (let c of categoryArr) {
-      lineCleaned = lineCleaned.replace(new RegExp(`(?<!\\s)${c}`, "g"), ` ${c}`);
+      lineCleaned = lineCleaned.replace(
+        new RegExp(`(?<!\\s)${c}`, "g"),
+        ` ${c}`
+      );
     }
     const tokens = lineCleaned.trim().split(/\s+/);
 
-
-    const categoryIdx = tokens.findIndex((t) =>
-      categoryArr.includes(t) || /^(General|OBC|SC|ST|EWS)/.test(t)
+    const categoryIdx = tokens.findIndex(
+      (t) => categoryArr.includes(t) || /^(General|OBC|SC|ST|EWS)/.test(t)
     );
     const name = tokens.slice(2, categoryIdx).join(" ").toLowerCase();
 
@@ -62,7 +65,6 @@ const strToJson = (ip: string[]) => {
     const category = tokens[categoryIdx + 1]?.startsWith("(")
       ? tokens[categoryIdx] + " " + tokens[categoryIdx + 1]
       : tokens[categoryIdx];
-
 
     const subCategoryIdx = tokens.findIndex((t) => subCategoryArr?.includes(t));
     let subCategory = "nil";
@@ -120,15 +122,17 @@ const strToJson = (ip: string[]) => {
   }
   return op;
 };
-app.get("/pdfparse", async (req,res) => {
+app.get("/pdfparse", async (req, res) => {
   try {
-    const filePath =
-      "files/COMMON MERIT LIST BOTH DIRECT AND INSERVICE FROM CONVENER PUBLISH_17_11_2024.pdf";
+    const fileId = "19Rr37cEJJbK0YhYu-b_3z8_8p3Zz2ZGF";
+    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
 
-    const unifiedStrings = await extractPdfData(filePath);
+    // download file
+    const response = await axios.get(url, { responseType: "arraybuffer" });
+    const existingPdfBuffer = Buffer.from(response.data);
+    const unifiedStrings = await extractPdfData(existingPdfBuffer);
     const finalData = unifiedStrings?.map((i) => strToJson(i));
-    if (!unifiedStrings)
-      return res.json({ status: 404, msg: "No data found" });
+    if (!unifiedStrings) return res.json({ status: 404, msg: "No data found" });
     return res.json({ status: 200, data: finalData });
   } catch (error) {
     console.error("pdflib error:", error);
@@ -138,6 +142,6 @@ app.get("/pdfparse", async (req,res) => {
     });
   }
 });
-app.listen(3000, () =>{
-  console.log(`http://localhost:3000`)
+app.listen(3000, () => {
+  console.log(`http://localhost:3000`);
 });
