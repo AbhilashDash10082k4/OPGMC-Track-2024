@@ -5,10 +5,10 @@ export interface ExtractedData {
   name: String;
   category: String;
   subCategory: String;
-  typeOfCandidate: { type: String; enum: ["DIR", "INS"] };
+  typeOfCandidate: "DIR" | "INS"
   incentivePercent: number;
   stateSpecificPercentile: number;
-  neetAIR: Number;
+  neetAIR: number;
   courseAppliedFor: String;
   neetAppID: String;
   stateSpecificRank: number;

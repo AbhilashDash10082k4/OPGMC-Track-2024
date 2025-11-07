@@ -1,10 +1,13 @@
 import express from "express";
+import dotenv from "dotenv";
 import { PDFParse } from "pdf-parse";
 import { ExtractedData, optionalDataType } from "./lib/types";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import axios from "axios";
 import fs from "fs/promises";
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 function mergeContinuationLines2(page: string[]): string[] {
@@ -77,17 +80,17 @@ const strToJson = (ip: string[]) => {
     const typeOfCandidate = tokens?.includes("DIR") ? "DIR" : "INS";
 
     const incentivePercentIdx = tokens.indexOf(typeOfCandidate) + 1;
-    const incentivePercent = tokens[incentivePercentIdx];
+    const incentivePercent = Number(tokens[incentivePercentIdx]);
 
-    const stateSpecificPercentile = tokens[incentivePercentIdx + 1];
+    const stateSpecificPercentile = Number(tokens[incentivePercentIdx + 1]);
 
-    const neetAIR = tokens[incentivePercentIdx + 2];
+    const neetAIR = Number(tokens[incentivePercentIdx + 2]);
 
     const courseAppliedFor = tokens[incentivePercentIdx + 3];
 
     const neetAppID = tokens[incentivePercentIdx + 4];
 
-    const stateSpecificRank = tokens[incentivePercentIdx + 5];
+    const stateSpecificRank = Number(tokens[incentivePercentIdx + 5]);
 
     const allNums = line.match(/\b\d+\b/g) || [];
     const lenNums = allNums.length;
@@ -115,14 +118,27 @@ const strToJson = (ip: string[]) => {
       neetAppID,
       stateSpecificRank,
       categoryRank: {
-        [categoryRankType]: categoryRankNum,
-        rank_ur: rankUR,
+        [categoryRankType]: Number(categoryRankNum),
+        rank_ur: Number(rankUR),
       },
     });
   }
   return op;
 };
-app.get("/", (req, res) => res.send("✅ Backend is live! View the data at https://opgmc-track-2024-1.onrender.com/pdfparse"));
+const sendDataToFrontEnd = async (
+  urlToSendData: string,
+  finalData: ExtractedData[]
+) => {
+  const sendDataToDB = await axios.post(urlToSendData,finalData);
+  if (!sendDataToDB || sendDataToDB.status >= 400) {
+    return Response.json({ status: 502, msg: "Could not send data to DB" });
+  }
+};
+app.get("/", (req, res) =>
+  res.send(
+    "✅ Backend is live! View the data at https://opgmc-track-2024-1.onrender.com/pdfparse"
+  )
+);
 app.get("/pdfparse", async (req, res) => {
   try {
     const fileId = "19Rr37cEJJbK0YhYu-b_3z8_8p3Zz2ZGF";
@@ -131,18 +147,57 @@ app.get("/pdfparse", async (req, res) => {
     // download file
     const response = await axios.get(url, { responseType: "arraybuffer" });
     const existingPdfBuffer = Buffer.from(response.data);
-    const unifiedStrings = await extractPdfData(existingPdfBuffer);
+    const unifiedStrings = (await extractPdfData(
+      existingPdfBuffer
+    )) as string[][];
     const finalData = unifiedStrings?.map((i) => strToJson(i));
     if (!unifiedStrings) return res.json({ status: 404, msg: "No data found" });
-    return res.json({ status: 200, data: finalData });
-  } catch (error) {
-    console.error("pdflib error:", error);
+    const urlToSendData = process.env.NEXT_API_URL as string | undefined;
+    if (!urlToSendData) {
+      console.error(
+        "NEXT_API_URL is not set. Check your .env file and dotenv setup."
+      );
+      return res.status(500).json({
+        status: 500,
+        msg: "Server misconfiguration: NEXT_API_URL not set",
+      });
+    }
+
+    const callToFrontendURL = await sendDataToFrontEnd(
+      urlToSendData,
+      finalData.flat()
+    );
+    if (!callToFrontendURL)
+      return res.json({
+        status: 400,
+        data: finalData.flat(),
+        msg: "data could not be sent to db",
+      });
     return res.json({
-      status: 500,
-      error: error && (error as any).message ? (error as any).message : error,
+      status: 200,
+      data: finalData.flat(),
+      msg: "data sent to db",
     });
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "response" in error) {
+      // axios error: (error as any).response may contain status/data
+      const axiosErr = error as any;
+      console.error("pdflib axios error:", {
+        message: axiosErr.message,
+        status: axiosErr.response?.status,
+        data: axiosErr.response?.data,
+      });
+      return res.status(axiosErr.response?.status ?? 500).json({
+        status: axiosErr.response?.status ?? 500,
+        error: axiosErr.response?.data ?? axiosErr.message,
+      });
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("pdflib error:", message);
+    return res.status(500).json({ status: 500, error: message });
   }
 });
-app.listen(3000, () => {
-  console.log(`http://localhost:3000`);
+app.listen(port, () => {
+  console.log(`http://localhost:${port}`);
 });
