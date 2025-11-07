@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+// client-only component
 import {
   Table,
   TableBody,
@@ -13,54 +13,58 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowUpDown, ChevronLeft, ChevronRight, Trophy, GraduationCap } from "lucide-react";
 import { MeritListCandidate } from "@/lib/data/meritList";
+import useServerPagination from "@/lib/hooks/useServerPagination";
 
 interface MeritListTableProps {
-  data: MeritListCandidate[];
+  data?: MeritListCandidate[];
 }
 
-type SortField = "rank" | "percentile";
-type SortOrder = "asc" | "desc";
-
 export default function MeritListTable({ data }: MeritListTableProps) {
-  const [sortField, setSortField] = useState<SortField>("rank");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 20;
+  // Use server-side pagination by default. The hook queries /api/pagination
+  const {
+    data: paginatedData,
+    total,
+    totalPages,
+    page,
+    startIndex,
+    endIndex,
+    loading,
+    error,
+    setPage,
+    setSortField,
+    setSortOrder,
+  } = useServerPagination<MeritListCandidate>({ initialPage: 1 });
 
-  // Sort data
-  const sortedData = [...data].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-    
-    if (sortOrder === "asc") {
-      return aValue - bValue;
-    } else {
-      return bValue - aValue;
-    }
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedData = sortedData.slice(startIndex, endIndex);
+  type SortField = "rank" | "percentile";
+  type SortOrder = "asc" | "desc";
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
+    // Toggle sort order when clicking same field, otherwise set asc
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+        return prev;
+      }
       setSortOrder("asc");
-    }
-    setCurrentPage(1);
+      return field;
+    });
+    // Reset to first page on sort change
+    setPage(1);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handlePageChange = (p: number) => {
+    setPage(p);
     document.getElementById('merit-list')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // If server returns no rows yet, allow a fallback to in-memory `data` prop when provided
+  const effectiveData = (paginatedData && paginatedData.length > 0) ? paginatedData : (data ?? []);
+
+  // Show server error (if any)
+  const errorMessage = error ?? null;
+
   const getRankBadgeColor = (rank: number) => {
+    console.log(rank);
     return "bg-primary text-primary-foreground";
   };
 
@@ -80,7 +84,7 @@ export default function MeritListTable({ data }: MeritListTableProps) {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 hover:bg-gradient-to-r hover:from-primary/10 hover:via-secondary/10 hover:to-accent/10">
+              <TableRow className="bg-linear-to-r from-primary/5 via-secondary/5 to-accent/5 hover:bg-linear-to-r hover:from-primary/10 hover:via-secondary/10 hover:to-accent/10">
                 <TableHead 
                   className="cursor-pointer hover:bg-primary/10 transition-colors font-bold text-foreground"
                   onClick={() => handleSort("rank")}
@@ -114,7 +118,23 @@ export default function MeritListTable({ data }: MeritListTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedData.length === 0 ? (
+              {errorMessage && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-4">
+                    <div className="text-sm text-destructive">{errorMessage}</div>
+                  </TableCell>
+                </TableRow>
+              )}
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-3 text-foreground/70">
+                      <div className="h-8 w-8 rounded-full bg-muted/50 animate-pulse" />
+                      <p className="text-lg font-medium text-foreground">Loading…</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : effectiveData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-3 text-foreground/70">
@@ -127,10 +147,10 @@ export default function MeritListTable({ data }: MeritListTableProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedData.map((candidate, index) => (
+                effectiveData.map((candidate) => (
                   <TableRow 
                     key={candidate.id} 
-                    className="hover:bg-gradient-to-r hover:from-primary/5 hover:via-secondary/5 hover:to-accent/5 transition-all duration-200"
+                    className="hover:bg-linear-to-r hover:from-primary/5 hover:via-secondary/5 hover:to-accent/5 transition-all duration-200"
                   >
                     <TableCell>
                       <span className={`inline-flex items-center justify-center px-2 py-1 rounded-md font-bold text-sm ${getRankBadgeColor(candidate.rank)}`}>
@@ -143,7 +163,7 @@ export default function MeritListTable({ data }: MeritListTableProps) {
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary/10 text-secondary font-semibold text-sm">
-                        {candidate.percentile.toFixed(2)}%
+                        {(candidate.percentile ?? 0).toFixed(2)}%
                       </span>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
@@ -173,21 +193,21 @@ export default function MeritListTable({ data }: MeritListTableProps) {
       </Card>
 
       {/* Pagination Controls */}
-      {paginatedData.length > 0 && (
+            {(effectiveData.length > 0 || loading) && (
         <Card className="p-4 border-2 shadow-md bg-card/80 backdrop-blur-sm">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-foreground/70 order-2 sm:order-1">
-              Showing <span className="font-semibold text-foreground">{startIndex + 1}</span> to{" "}
-              <span className="font-semibold text-foreground">{Math.min(endIndex, sortedData.length)}</span> of{" "}
-              <span className="font-semibold text-foreground">{sortedData.length}</span> results
+              Showing <span className="font-semibold text-foreground">{startIndex + 1}</span> to {" "}
+              <span className="font-semibold text-foreground">{Math.min(endIndex + 1, total)}</span> of {" "}
+              <span className="font-semibold text-foreground">{total}</span> results
             </div>
             
             <div className="flex items-center gap-2 order-1 sm:order-2">
-              <Button
+                <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
                 className="border-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
               >
                 <ChevronLeft className="h-4 w-4 sm:mr-1" />
@@ -196,34 +216,27 @@ export default function MeritListTable({ data }: MeritListTableProps) {
               
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((page) => {
-                    // Show first page, last page, current page, and pages around current
+                  .filter((pg) => {
                     return (
-                      page === 1 ||
-                      page === totalPages ||
-                      (page >= currentPage - 1 && page <= currentPage + 1)
+                      pg === 1 ||
+                      pg === totalPages ||
+                      (pg >= page - 1 && pg <= page + 1)
                     );
                   })
-                  .map((page, index, array) => {
-                    // Add ellipsis
-                    const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
-                    
+                  .map((pg, index, array) => {
+                    const showEllipsisBefore = index > 0 && pg - array[index - 1] > 1;
                     return (
-                      <div key={page} className="flex items-center">
-                        {showEllipsisBefore && (
-                          <span className="px-2 text-foreground/60">...</span>
-                        )}
+                      <div key={pg} className="flex items-center">
+                        {showEllipsisBefore && <span className="px-2 text-foreground/60">...</span>}
                         <Button
-                          variant={currentPage === page ? "default" : "outline"}
+                          variant={page === pg ? "default" : "outline"}
                           size="sm"
-                          onClick={() => handlePageChange(page)}
+                          onClick={() => handlePageChange(pg)}
                           className={`w-9 h-9 p-0 border-2 transition-all ${
-                            currentPage === page 
-                              ? "bg-primary text-primary-foreground border-primary shadow-md" 
-                              : "hover:bg-primary/10 hover:border-primary/50"
+                            page === pg ? "bg-primary text-primary-foreground border-primary shadow-md" : "hover:bg-primary/10 hover:border-primary/50"
                           }`}
                         >
-                          {page}
+                          {pg}
                         </Button>
                       </div>
                     );
@@ -233,8 +246,8 @@ export default function MeritListTable({ data }: MeritListTableProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
                 className="border-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
               >
                 <span className="hidden sm:inline">Next</span>

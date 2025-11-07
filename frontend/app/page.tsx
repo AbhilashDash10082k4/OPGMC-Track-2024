@@ -17,7 +17,6 @@ export default function Home() {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter data based on all criteria
   const filteredData = useMemo(() => {
     return meritListData.filter((candidate) => {
       // Text search filter
@@ -64,9 +63,7 @@ export default function Home() {
     <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-secondary/5">
       {/* Hero Landing Section */}
       <section className="min-h-screen relative overflow-hidden flex items-center">
-        {/* background overlay - slightly brighter but still dark themed */}
         <div className="absolute inset-0 bg-linear-to-r from-primary/20 via-secondary/20 to-accent/20 -z-10" />
-        {/* lift content slightly (translate up) for a more visually centered layout */}
         <div className="container mx-auto px-4 py-20 sm:py-24 lg:py-28 relative z-10 transform -translate-y-6">
           <div className="max-w-4xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4 animate-in fade-in slide-in-from-bottom-3 duration-500">
@@ -114,8 +111,6 @@ export default function Home() {
                 Apply Filters
               </Button>
             </div>
-
-            {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               {cardStats.map((stat, index) => (
                 <Card
@@ -167,8 +162,6 @@ export default function Home() {
                 onTypesChange={setSelectedTypes}
                 selectedCategories={selectedCategories}
                 onCategoriesChange={setSelectedCategories}
-                selectedColleges={selectedColleges}
-                onCollegesChange={setSelectedColleges}
                 selectedSubjects={selectedSubjects}
                 onSubjectsChange={setSelectedSubjects}
               />
@@ -207,8 +200,6 @@ export default function Home() {
                   onTypesChange={setSelectedTypes}
                   selectedCategories={selectedCategories}
                   onCategoriesChange={setSelectedCategories}
-                  selectedColleges={selectedColleges}
-                  onCollegesChange={setSelectedColleges}
                   selectedSubjects={selectedSubjects}
                   onSubjectsChange={setSelectedSubjects}
                 />

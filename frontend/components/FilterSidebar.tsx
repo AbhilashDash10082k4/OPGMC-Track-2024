@@ -17,8 +17,6 @@ interface FilterSidebarProps {
   onTypesChange: (types: string[]) => void;
   selectedCategories: string[];
   onCategoriesChange: (categories: string[]) => void;
-  selectedColleges: string[];
-  onCollegesChange: (colleges: string[]) => void;
   selectedSubjects: string[];
   onSubjectsChange: (subjects: string[]) => void;
 }
@@ -30,20 +28,16 @@ export default function FilterSidebar({
   onTypesChange,
   selectedCategories,
   onCategoriesChange,
-  selectedColleges,
-  onCollegesChange,
   selectedSubjects,
   onSubjectsChange,
 }: FilterSidebarProps) {
   const types = getUniqueValues("typeOfCandidate");
   const categories = getUniqueValues("category");
-  const colleges = getUniqueValues("admittedCollege");
   const subjects = getUniqueValues("admittedSubject");
 
   const hasActiveFilters = 
     selectedTypes.length > 0 ||
     selectedCategories.length > 0 ||
-    selectedColleges.length > 0 ||
     selectedSubjects.length > 0 ||
     searchQuery !== "";
 
@@ -51,7 +45,6 @@ export default function FilterSidebar({
     onSearchChange("");
     onTypesChange([]);
     onCategoriesChange([]);
-    onCollegesChange([]);
     onSubjectsChange([]);
   };
 
@@ -168,49 +161,10 @@ export default function FilterSidebar({
           </div>
         </ScrollArea>
       </div>
-
-      {/* Admitted College */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium flex items-center justify-between text-foreground">
-          <span>Admitted College</span>
-          {selectedColleges.length > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-              {selectedColleges.length}
-            </span>
-          )}
-        </Label>
-        <ScrollArea className="h-40 border-2 rounded-lg p-3 bg-muted/50">
-          <div className="space-y-2">
-            {colleges.map((college) => (
-              <div key={college} className="flex items-center space-x-2 group">
-                <Checkbox
-                  id={`college-${college}`}
-                  checked={selectedColleges.includes(college)}
-                  onCheckedChange={() =>
-                    handleCheckboxChange(
-                      college,
-                      selectedColleges,
-                      onCollegesChange
-                    )
-                  }
-                  className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                />
-                <label
-                  htmlFor={`college-${college}`}
-                  className="text-sm cursor-pointer flex-1 group-hover:text-accent transition-colors text-foreground"
-                >
-                  {college}
-                </label>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
-
       {/* Admitted Subject */}
       <div className="space-y-3">
         <Label className="text-sm font-medium flex items-center justify-between text-foreground">
-          <span>Admitted Subject</span>
+          <span>Subject Chosen</span>
           {selectedSubjects.length > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-chart-1/10 text-chart-1">
               {selectedSubjects.length}
