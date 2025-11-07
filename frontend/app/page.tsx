@@ -13,7 +13,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedColleges, setSelectedColleges] = useState<string[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -34,10 +33,6 @@ export default function Home() {
         selectedCategories.length === 0 ||
         selectedCategories.includes(candidate.category);
 
-      const matchesCollege =
-        selectedColleges.length === 0 ||
-        selectedColleges.includes(candidate.admittedCollege);
-
       const matchesSubject =
         selectedSubjects.length === 0 ||
         selectedSubjects.includes(candidate.admittedSubject);
@@ -46,7 +41,6 @@ export default function Home() {
         matchesSearch &&
         matchesType &&
         matchesCategory &&
-        matchesCollege &&
         matchesSubject
       );
     });
@@ -54,11 +48,10 @@ export default function Home() {
     searchQuery,
     selectedTypes,
     selectedCategories,
-    selectedColleges,
     selectedSubjects,
   ]);
 
-  const cardStats = statistics({selectedTypes, selectedCategories, selectedColleges, selectedSubjects});
+  const cardStats = statistics({selectedTypes, selectedCategories, selectedSubjects});
   return (
     <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-secondary/5">
       {/* Hero Landing Section */}
@@ -179,13 +172,11 @@ export default function Home() {
               {showFilters ? "Hide Filters" : "Show Filters"}
               {selectedTypes.length +
                 selectedCategories.length +
-                selectedColleges.length +
                 selectedSubjects.length >
                 0 && (
                 <span className="ml-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs">
                   {selectedTypes.length +
                     selectedCategories.length +
-                    selectedColleges.length +
                     selectedSubjects.length}
                 </span>
               )}

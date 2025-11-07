@@ -4,13 +4,11 @@ import { meritListData } from "./data/meritList";
 interface PropTypes {
   selectedTypes: string[];
   selectedCategories: string[];
-  selectedColleges: string[];
   selectedSubjects: string[];
 }
 export const statistics = ({
   selectedTypes,
   selectedCategories,
-  selectedColleges,
   selectedSubjects,
 }: PropTypes) => {
   return [
@@ -40,7 +38,6 @@ export const statistics = ({
       value: (
         selectedTypes.length +
         selectedCategories.length +
-        selectedColleges.length +
         selectedSubjects.length
       ).toString(),
       color: "text-chart-1",
