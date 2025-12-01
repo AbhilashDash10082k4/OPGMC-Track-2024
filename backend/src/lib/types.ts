@@ -47,3 +47,29 @@ export const zValidatedDataSchema = z.object({
     rank_ur: z.number(),
   }),
 });
+
+export interface ExtractedDataForUrl2 {
+  serialNo: number;
+  neetRollNo: String;
+  stateSpecificPercentile: number;
+  stateAppNo: String;
+  name: String;
+  typeOfCandidate: "DIR" | "INS";
+  oldCompositeCMRR3: number,
+  compositeNewCMRSplStray: number;
+  newINSCMRSplStray: number | "nil";
+  newDirCMRSplStray: number | "nil";
+  newDipCMRSplStray: number | "nil";
+  admissionStatusAllIndiaState:string;
+  admittedCourse: string;
+  admittedCollege: string;
+  admittedSubject: string;
+  admittedCategory: string;
+  admittedRound: Number;
+}
+
+export type Props = {
+  url1?: string;
+  url2?: string;
+  existingPdfBytes?: Buffer<any>;
+};

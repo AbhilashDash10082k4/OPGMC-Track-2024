@@ -1,12 +1,17 @@
 import axios from "axios";
-import { ExtractedData } from "./types";
+import { ExtractedData } from ".";
 
 export const sendDataToFrontEnd = async (
   urlToSendData: string,
   finalData: ExtractedData[]
-) => {
-  const sendDataToDB = await axios.post(urlToSendData,finalData);
-  if (!sendDataToDB || sendDataToDB.status >= 400) {
-    return Response.json({ status: 502, msg: "Could not send data to DB" });
+): Promise<boolean> => {
+  try {
+    const sendDataToDB = await axios.post(urlToSendData, finalData, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return sendDataToDB.status >= 200 && sendDataToDB.status < 300;
+  } catch (err) {
+    console.error("sendDataToFrontEnd error:", err);
+    return false;
   }
 };
