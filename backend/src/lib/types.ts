@@ -71,5 +71,6 @@ export interface ExtractedDataForUrl2 {
 export type Props = {
   url1?: string;
   url2?: string;
-  existingPdfBytes?: Buffer<any>;
+  existingPdfBytes?: Buffer<any>,
+  existingPdfBytes2?: Buffer<any>
 };

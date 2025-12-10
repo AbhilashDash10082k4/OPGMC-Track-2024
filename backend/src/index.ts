@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { apiFn } from "./lib";
+import { PDFParse } from "pdf-parse";
 
 dotenv.config();
 
@@ -16,7 +17,8 @@ app.get("/pdfparse", async (req, res) => {
   try {
     const url1 = process.env.FILE_URL || "";
     const url2 = process.env.FILE_URL2 || "";
-    const {finalData1 , finalData2} = await apiFn({url1, url2});
+    const { finalData1, finalData2 } = await apiFn({ url1, url2 });
+    
     return res.json({
       status: 200,
       data: finalData2,

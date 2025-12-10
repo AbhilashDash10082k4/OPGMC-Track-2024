@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import dotenv from "dotenv";
-import { strToJson, extractPdfDataForBothPdfs } from ".";
+import { strToJson, extractPdfDataForBothPdfs, parseRowsToJson } from ".";
 
 dotenv.config();
 type PropForAPIFn = {
@@ -15,12 +15,17 @@ export async function apiFn({ url1, url2 }: PropForAPIFn) {
   const existingPdfBytes = Buffer.from(response.data);
   const unifiedStrings = (await extractPdfDataForBothPdfs({
     url1,
-    existingPdfBytes,
+    existingPdfBytes
   })) as string[][];
   const finalData1 = unifiedStrings?.map((i) => strToJson(i));
   if (!unifiedStrings) throw new Error("No data found");
-  const s = await extractPdfDataForBothPdfs({ url2, existingPdfBytes });
-  const finalData2 = s?.map((i) => strToJson(i))!;
+
+  const response2 = await axios.get(url2 as string, {
+    responseType: "arraybuffer",
+  });
+  const existingPdfBytes2 = Buffer.from(response2.data);
+  const unifiedStrings2 = await extractPdfDataForBothPdfs({ url2, existingPdfBytes2 });
+  const finalData2 = unifiedStrings2?.map((i) => parseRowsToJson(i))!;
 
   return { finalData1, finalData2 };
 }

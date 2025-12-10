@@ -1,4 +1,4 @@
-import { ExtractedData } from ".";
+import { ExtractedData } from "..";
 
 export const strToJson = (ip: string[]) => {
   const op = [];
