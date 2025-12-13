@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 export type SortField = "rank" | "percentile";
 export type SortOrder = "asc" | "desc";
 
-// GET /api/pagination?page=1&rowsPerPage=20&sortField=rank&sortOrder=asc
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);

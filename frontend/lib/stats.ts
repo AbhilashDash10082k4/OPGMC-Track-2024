@@ -1,16 +1,12 @@
-import { Users, GraduationCap, Award, TrendingUp } from "lucide-react";
+import { Users, GraduationCap, Award } from "lucide-react";
 import { meritListData } from "./data/meritList";
 
-interface PropTypes {
-  selectedTypes: string[];
-  selectedCategories: string[];
-  selectedSubjects: string[];
-}
-export const statistics = ({
-  selectedTypes,
-  selectedCategories,
-  selectedSubjects,
-}: PropTypes) => {
+// interface PropTypes {
+//   selectedTypes: string[];
+//   selectedCategories: string[];
+//   selectedSubjects: string[];
+// }
+export const statistics = () => {
   return [
     {
       icon: Users,
@@ -32,7 +28,9 @@ export const statistics = ({
       ).size.toString(),
       color: "text-accent",
     },
-    {
+  ];
+};
+/*{
       icon: TrendingUp,
       label: "Active Filters",
       value: (
@@ -41,6 +39,4 @@ export const statistics = ({
         selectedSubjects.length
       ).toString(),
       color: "text-chart-1",
-    },
-  ];
-};
+} */

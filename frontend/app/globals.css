@@ -164,7 +164,7 @@
 
   /* Container responsive padding */
   .container {
-    @apply px-4 sm:px-6 lg:px-8;
+    @apply px-0 py-0 mx-0;
   }
 
   /* Gradient text utilities */

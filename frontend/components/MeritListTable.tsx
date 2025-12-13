@@ -36,7 +36,7 @@ export default function MeritListTable({ data }: MeritListTableProps) {
   } = useServerPagination<MeritListCandidate>({ initialPage: 1 });
 
   type SortField = "rank" | "percentile";
-  type SortOrder = "asc" | "desc";
+  // type SortOrder = "asc" | "desc";
 
   const handleSort = (field: SortField) => {
     // Toggle sort order when clicking same field, otherwise set asc
